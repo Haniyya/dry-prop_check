@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 module Dry
   module PropCheck
     class TypeRegistry
       class << self
-        include PropCheck::Generators
+        include ::PropCheck::Generators
 
         def [](name)
           public_send(name)
@@ -19,9 +21,15 @@ module Dry
           when eq(Float) then float
           when eq(BigDecimal) then float.map(&:to_s).map { |f| BigDecimal(f) }
           when eq(String) then string
-          when eq(Date) then date_time_vals.map { |hash| hash.values_at(:year, :month, :day) }.map { |vals| Date.new(*vals) }
-          when eq(DateTime) then date_time_vals.map { |hash| DateTime.new(*hash.values_at(:year, :month, :day, :hour, :minute, :second)) }
-          when eq(Time) then date_time_vals.map { |hash| Time.new(*hash.values_at(:year, :month, :day, :hour, :minute, :second)) }
+          when eq(Date) then date_time_vals.map do |hash|
+                               hash.values_at(:year, :month, :day)
+                             end.map { |vals| Date.new(*vals) }
+          when eq(DateTime) then date_time_vals.map do |hash|
+                                   DateTime.new(*hash.values_at(:year, :month, :day, :hour, :minute, :second))
+                                 end
+          when eq(Time) then date_time_vals.map do |hash|
+                               Time.new(*hash.values_at(:year, :month, :day, :hour, :minute, :second))
+                             end
           when eq(Array) then array(any)
           when eq(Hash) then hash(any, any)
           else raise("unregistered type generator #{type}")
@@ -42,7 +50,11 @@ module Dry
         end
 
         def any
-          nillable(truthy)
+          nillable(
+            one_of(
+              string, simple_symbol, integer, float, array(float)
+            )
+          )
         end
 
         def eq(a)

@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+require_relative 'predicates'
 require_relative 'type_registry'
 
 module Dry
